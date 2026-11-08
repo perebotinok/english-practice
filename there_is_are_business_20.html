@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business English — There is / There are</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: #f3f6fb; color: #243047;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .quiz {
+    width: min(720px, 100%); background: #fff; border-radius: 22px;
+    padding: 32px; box-shadow: 0 12px 35px rgba(30,50,90,.12);
+  }
+  .top { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+  h1 { font-size: clamp(24px, 4vw, 32px); margin:0 0 8px; }
+  .subtitle { color:#68758b; margin:0 0 24px; font-size:16px; }
+  .counter { color:#68758b; font-weight:700; white-space:nowrap; }
+  .track { height:8px; background:#e9edf4; border-radius:99px; overflow:hidden; margin:18px 0 30px; }
+  .bar { height:100%; width:0; background:#5278d8; transition:width .25s; }
+  .sentence { font-size:clamp(22px, 4vw, 29px); line-height:1.55; margin:12px 0 28px; }
+  .blank { display:inline-block; min-width:82px; text-align:center; color:#5278d8; font-weight:700; border-bottom:3px solid #b8c7e8; padding:0 5px 2px; }
+  .choices { display:flex; flex-wrap:wrap; gap:12px; }
+  .choice {
+    border:2px solid #d8dfeb; background:#fff; color:#243047; border-radius:12px;
+    padding:13px 28px; font-size:19px; font-weight:700; cursor:pointer;
+    transition:background .15s, border-color .15s;
+  }
+  .choice:hover:not(:disabled) { border-color:#5278d8; background:#f4f7ff; }
+  .choice:disabled { cursor:default; opacity:1; }
+  .choice.correct { background:#dff5e6; border-color:#32a45b; color:#176b35; }
+  .choice.wrong { background:#ffe3e3; border-color:#d94b4b; color:#a52222; }
+  .feedback { min-height:30px; margin:20px 0 8px; font-size:16px; font-weight:700; }
+  .feedback.good { color:#218447; }
+  .feedback.bad { color:#c03939; }
+  .bottom { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:22px; }
+  .score { color:#68758b; font-size:15px; }
+  .next, .restart {
+    border:0; border-radius:12px; padding:13px 20px; font-size:17px;
+    font-weight:700; color:white; background:#5278d8; cursor:pointer;
+  }
+  .next:disabled { background:#c4ccda; cursor:not-allowed; }
+  .next span { font-size:22px; vertical-align:-1px; margin-left:8px; }
+  .finish { text-align:center; padding:24px 0 8px; }
+  .finish h2 { font-size:28px; }
+  .finish p { color:#68758b; font-size:18px; line-height:1.5; }
+  @media (max-width:520px) { .quiz{padding:22px;} .bottom{align-items:flex-end;} .choice{flex:1;} }
+
+  .answer { display:flex; flex-wrap:wrap; gap:10px; align-items:center; min-height:76px;
+    border:2px dashed #d8dfeb; border-radius:12px; padding:12px; margin: -8px 0 22px; }
+  .answer:empty::before { content:"Нажимайте на слова, чтобы составить перевод"; color:#8995a7; font-size:15px; }
+  .answer .choice { padding:10px 17px; font-size:18px; }
+  .answer .choice.correct { background:#dff5e6; border-color:#32a45b; color:#176b35; }
+  .answer.good { border-color:#32a45b; background:#f0fbf3; }
+  .sentence.good { color:#218447; }
+  .answer.bad { border-color:#d94b4b; }
+  .word-bank { margin-top:8px; }
+  @media (max-width:520px) { .answer .choice { flex:0 1 auto; } }
+
+  .sentence { line-height:1.65; }
+  .sentence .blank-slot { display:inline-block; min-width:130px; padding:0 8px 3px; text-align:center; border-bottom:3px solid #b8c7e8; color:#5278d8; font-weight:700; border-radius:5px; }
+  .sentence .blank-slot.good { color:#176b35; background:#dff5e6; border-color:#32a45b; }
+  .sentence .blank-slot.bad { color:#a52222; background:#ffe3e3; border-color:#d94b4b; }
+  .choices { margin-top:12px; }
+  .choice { flex:0 1 auto; }
+  .instruction { font-size:15px; color:#68758b; margin:0 0 14px; }
+  @media (max-width:520px) { .sentence .blank-slot { min-width:95px; } }
+</style></head>
+<body><main class="quiz">
+<div class="top"><div><h1>Business English</h1><p class="subtitle">Бизнес · Pre-Intermediate · There is / There are</p></div><div class="counter" id="counter">1 / 20</div></div>
+<div class="track"><div class="bar" id="bar"></div></div>
+<section id="questionArea"><p class="instruction">Выберите правильную конструкцию для пропуска.</p>
+<div class="sentence" id="sentence"></div>
+<div class="choices" id="choices"><button class="choice" data-option="there is" type="button">there is</button><button class="choice" data-option="there are" type="button">there are</button></div>
+<div class="feedback" id="feedback" aria-live="polite"></div>
+<div class="bottom"><div class="score" id="score">Правильных ответов: 0</div><button class="next" id="next" disabled>Далее <span>➜</span></button></div></section>
+<section class="finish" id="finish" hidden><h2>Готово!</h2><p id="result"></p><button class="restart" id="restart">Пройти ещё раз ↻</button></section></main>
+<script>
+const questions = [
+  {
+    "text": "___ a meeting today.",
+    "answer": "there is"
+  },
+  {
+    "text": "___ two managers here.",
+    "answer": "there are"
+  },
+  {
+    "text": "___ a new client.",
+    "answer": "there is"
+  },
+  {
+    "text": "___ three emails for you.",
+    "answer": "there are"
+  },
+  {
+    "text": "___ an office nearby.",
+    "answer": "there is"
+  },
+  {
+    "text": "___ no free rooms for the meeting.",
+    "answer": "there are"
+  },
+  {
+    "text": "___ a problem with the invoice.",
+    "answer": "there is"
+  },
+  {
+    "text": "___ several orders to check this morning.",
+    "answer": "there are"
+  },
+  {
+    "text": "___ a printer in your office.",
+    "answer": "there is"
+  },
+  {
+    "text": "___ two people waiting for the manager.",
+    "answer": "there are"
+  },
+  {
+    "text": "___ a mistake in this report.",
+    "answer": "there is"
+  },
+  {
+    "text": "___ some new messages from our clients.",
+    "answer": "there are"
+  },
+  {
+    "text": "___ a delivery scheduled for Friday.",
+    "answer": "there is"
+  },
+  {
+    "text": "___ five documents on your desk.",
+    "answer": "there are"
+  },
+  {
+    "text": "___ a reason why the payment is late.",
+    "answer": "there is"
+  },
+  {
+    "text": "___ several changes we need to make before the presentation.",
+    "answer": "there are"
+  },
+  {
+    "text": "___ a chance to finish the project before the deadline.",
+    "answer": "there is"
+  },
+  {
+    "text": "___ several questions about the new contract that we should discuss.",
+    "answer": "there are"
+  },
+  {
+    "text": "___ an important detail missing from the email you sent yesterday.",
+    "answer": "there is"
+  },
+  {
+    "text": "___ three suppliers who can deliver the equipment by next Monday.",
+    "answer": "there are"
+  }
+];
+let index=0, correct=0, solved=false;
+const sentence=document.getElementById('sentence'),choices=document.getElementById('choices'),feedback=document.getElementById('feedback'),next=document.getElementById('next'),bar=document.getElementById('bar'),counter=document.getElementById('counter'),score=document.getElementById('score'),finish=document.getElementById('finish'),questionArea=document.getElementById('questionArea');
+function showSentence(value='',status='') {
+  const [before,after]=questions[index].text.split('___');
+  sentence.replaceChildren(document.createTextNode(before));
+  const slot=document.createElement('span');slot.className='blank-slot'+(status?' '+status:'');slot.textContent=value||'________';sentence.appendChild(slot);
+  sentence.appendChild(document.createTextNode(after));
+}
+function render(){solved=false;counter.textContent=`${index+1} / ${questions.length}`;bar.style.width=`${index/questions.length*100}%`;feedback.textContent='';feedback.className='feedback';next.disabled=true;showSentence();choices.querySelectorAll('button').forEach(b=>{b.disabled=false;b.classList.remove('correct','wrong');});}
+function choose(value){if(solved)return;const ok=value===questions[index].answer;showSentence(value,ok?'good':'bad');choices.querySelectorAll('button').forEach(b=>{b.classList.toggle('correct',ok && b.dataset.option===value);b.classList.toggle('wrong',!ok && b.dataset.option===value);});if(ok){solved=true;correct++;score.textContent=`Правильных ответов: ${correct}`;feedback.textContent='Правильно! Отличная работа!';feedback.className='feedback good';next.disabled=false;choices.querySelectorAll('button').forEach(b=>b.disabled=true);}else{feedback.textContent='Попробуйте другой вариант.';feedback.className='feedback bad';}}
+choices.addEventListener('click',e=>{const b=e.target.closest('button[data-option]');if(b)choose(b.dataset.option);});
+next.addEventListener('click',()=>{if(!solved)return;index++;if(index<questions.length){render();}else{questionArea.hidden=true;finish.hidden=false;bar.style.width='100%';counter.textContent=`${questions.length} / ${questions.length}`;document.getElementById('result').textContent=`Правильных ответов: ${correct} из ${questions.length}.`;}});
+document.getElementById('restart').addEventListener('click',()=>{index=0;correct=0;score.textContent='Правильных ответов: 0';finish.hidden=true;questionArea.hidden=false;render();});render();
+</script></body></html>
