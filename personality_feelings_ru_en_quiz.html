@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personality & Feelings — Выбери английский перевод</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: #f3f6fb; color: #243047;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .quiz {
+    width: min(720px, 100%); background: #fff; border-radius: 22px;
+    padding: 32px; box-shadow: 0 12px 35px rgba(30,50,90,.12);
+  }
+  .top { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+  h1 { font-size: clamp(24px, 4vw, 32px); margin:0 0 8px; }
+  .subtitle { color:#68758b; margin:0 0 24px; font-size:16px; }
+  .counter { color:#68758b; font-weight:700; white-space:nowrap; }
+  .track { height:8px; background:#e9edf4; border-radius:99px; overflow:hidden; margin:18px 0 30px; }
+  .bar { height:100%; width:0; background:#5278d8; transition:width .25s; }
+  .sentence { font-size:clamp(22px, 4vw, 29px); line-height:1.55; margin:12px 0 28px; }
+  .blank { display:inline-block; min-width:82px; text-align:center; color:#5278d8; font-weight:700; border-bottom:3px solid #b8c7e8; padding:0 5px 2px; }
+  .choices { display:flex; flex-wrap:wrap; gap:12px; }
+  .choice {
+    border:2px solid #d8dfeb; background:#fff; color:#243047; border-radius:12px;
+    padding:13px 28px; font-size:19px; font-weight:700; cursor:pointer;
+    transition:background .15s, border-color .15s;
+  }
+  .choice:hover:not(:disabled) { border-color:#5278d8; background:#f4f7ff; }
+  .choice:disabled { cursor:default; opacity:1; }
+  .choice.correct { background:#dff5e6; border-color:#32a45b; color:#176b35; }
+  .choice.wrong { background:#ffe3e3; border-color:#d94b4b; color:#a52222; }
+  .feedback { min-height:30px; margin:20px 0 8px; font-size:16px; font-weight:700; }
+  .feedback.good { color:#218447; }
+  .feedback.bad { color:#c03939; }
+  .bottom { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:22px; }
+  .score { color:#68758b; font-size:15px; }
+  .next, .restart {
+    border:0; border-radius:12px; padding:13px 20px; font-size:17px;
+    font-weight:700; color:white; background:#5278d8; cursor:pointer;
+  }
+  .next:disabled { background:#c4ccda; cursor:not-allowed; }
+  .next span { font-size:22px; vertical-align:-1px; margin-left:8px; }
+  .finish { text-align:center; padding:24px 0 8px; }
+  .finish h2 { font-size:28px; }
+  .finish p { color:#68758b; font-size:18px; line-height:1.5; }
+  @media (max-width:520px) { .quiz{padding:22px;} .bottom{align-items:flex-end;} .choice{flex:1;} }
+
+  .sentence { font-weight:700; }
+  .choices { display:grid; grid-template-columns:1fr 1fr; }
+  .choice { text-align:left; font-weight:600; font-size:17px; padding:14px 17px; line-height:1.35; }
+  .choice.correct { background:#dff5e6; border-color:#32a45b; color:#176b35; }
+  .choice.wrong { background:#ffe3e3; border-color:#d94b4b; color:#a52222; }
+  @media(max-width:580px) { .choices { grid-template-columns:1fr; } .choice {flex:auto;} }
+</style>
+</head>
+<body>
+<main class="quiz">
+  <div class="top">
+    <div>
+      <h1>Personality & Feelings</h1>
+      <p class="subtitle">Выберите английский перевод русского слова или выражения</p>
+    </div>
+    <div class="counter" id="counter">1 / 78</div>
+  </div>
+  <div class="track"><div class="bar" id="bar"></div></div>
+  <section id="questionArea">
+    <div class="sentence" id="sentence"></div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <div class="bottom">
+      <div class="score" id="score">Правильных ответов: 0</div>
+      <button class="next" id="next" disabled aria-label="Следующее задание">Далее <span>➜</span></button>
+    </div>
+  </section>
+  <section class="finish" id="finish" hidden>
+    <h2>Готово!</h2>
+    <p id="result"></p>
+    <button class="restart" id="restart">Пройти ещё раз ↻</button>
+  </section>
+</main>
+<script>
+const questions = [
+  {
+    "word": "тревожный",
+    "answer": "anxious",
+    "options": [
+      "anxious",
+      "self-conscious",
+      "sensible",
+      "patient"
+    ]
+  },
+  {
+    "word": "беспокойный",
+    "answer": "anxious",
+    "options": [
+      "well-bred",
+      "kind",
+      "trustworthy",
+      "anxious"
+    ]
+  },
+  {
+    "word": "испытывающий опасения",
+    "answer": "apprehensive",
+    "options": [
+      "apprehensive",
+      "impatient",
+      "embarrassed",
+      "charming"
+    ]
+  },
+  {
+    "word": "встревоженный",
+    "answer": "apprehensive",
+    "options": [
+      "envious",
+      "apprehensive",
+      "kind",
+      "tactful"
+    ]
+  },
+  {
+    "word": "сердитый",
+    "answer": "cross",
+    "options": [
+      "envious",
+      "bored",
+      "cheerful",
+      "cross"
+    ]
+  },
+  {
+    "word": "раздражённый",
+    "answer": "cross",
+    "options": [
+      "relieved",
+      "cross",
+      "egotistical",
+      "sensible"
+    ]
+  },
+  {
+    "word": "уверенный в себе",
+    "answer": "assertive",
+    "options": [
+      "assertive",
+      "frightened",
+      "suspicious",
+      "decisive"
+    ]
+  },
+  {
+    "word": "уверенный в себе",
+    "answer": "assertive",
+    "options": [
+      "assertive",
+      "ashamed",
+      "egotistical",
+      "relieved"
+    ]
+  },
+  {
+    "word": "очаровательный",
+    "answer": "charming",
+    "options": [
+      "charming",
+      "well-bred",
+      "decisive",
+      "excited"
+    ]
+  },
+  {
+    "word": "очаровательный",
+    "answer": "charming",
+    "options": [
+      "charming",
+      "relieved",
+      "self-centered",
+      "cross"
+    ]
+  },
+  {
+    "word": "жизнерадостный",
+    "answer": "cheerful",
+    "options": [
+      "confused",
+      "clumsy",
+      "cynical",
+      "cheerful"
+    ]
+  },
+  {
+    "word": "весёлый",
+    "answer": "cheerful",
+    "options": [
+      "proud",
+      "charming",
+      "cheerful",
+      "self-confident"
+    ]
+  },
+  {
+    "word": "расстроенный",
+    "answer": "upset",
+    "options": [
+      "kind",
+      "upset",
+      "reliable",
+      "impatient"
+    ]
+  },
+  {
+    "word": "огорчённый",
+    "answer": "upset",
+    "options": [
+      "upset",
+      "well-bred",
+      "decisive",
+      "assertive"
+    ]
+  },
+  {
+    "word": "завистливый",
+    "answer": "envious",
+    "options": [
+      "envious",
+      "disappointed",
+      "anxious",
+      "frightened"
+    ]
+  },
+  {
+    "word": "завистливый",
+    "answer": "envious",
+    "options": [
+      "self-conscious",
+      "delighted",
+      "ashamed",
+      "envious"
+    ]
+  },
+  {
+    "word": "неуклюжий",
+    "answer": "clumsy",
+    "options": [
+      "confused",
+      "well-bred",
+      "tactful",
+      "clumsy"
+    ]
+  },
+  {
+    "word": "неловкий",
+    "answer": "clumsy",
+    "options": [
+      "proud",
+      "envious",
+      "clumsy",
+      "apprehensive"
+    ]
+  },
+  {
+    "word": "испытавший облегчение",
+    "answer": "relieved",
+    "options": [
+      "well-bred",
+      "tactful",
+      "relieved",
+      "egotistical"
+    ]
+  },
+  {
+    "word": "испытавший облегчение",
+    "answer": "relieved",
+    "options": [
+      "relieved",
+      "trustworthy",
+      "ashamed",
+      "proud"
+    ]
+  },
+  {
+    "word": "циничный",
+    "answer": "cynical",
+    "options": [
+      "kind",
+      "upset",
+      "cynical",
+      "decisive"
+    ]
+  },
+  {
+    "word": "циничный",
+    "answer": "cynical",
+    "options": [
+      "confused",
+      "self-confident",
+      "cynical",
+      "self-conscious"
+    ]
+  },
+  {
+    "word": "эгоистичный",
+    "answer": "egotistical",
+    "options": [
+      "cross",
+      "sensitive",
+      "delighted",
+      "egotistical"
+    ]
+  },
+  {
+    "word": "самовлюблённый",
+    "answer": "egotistical",
+    "options": [
+      "apprehensive",
+      "tactful",
+      "egotistical",
+      "trustworthy"
+    ]
+  },
+  {
+    "word": "взволнованный",
+    "answer": "excited",
+    "options": [
+      "clumsy",
+      "scared",
+      "excited",
+      "sensible"
+    ]
+  },
+  {
+    "word": "воодушевлённый",
+    "answer": "excited",
+    "options": [
+      "proud",
+      "embarrassed",
+      "decisive",
+      "excited"
+    ]
+  },
+  {
+    "word": "пристыженный",
+    "answer": "ashamed",
+    "options": [
+      "bored",
+      "cheerful",
+      "ashamed",
+      "scared"
+    ]
+  },
+  {
+    "word": "испытывающий стыд",
+    "answer": "ashamed",
+    "options": [
+      "ashamed",
+      "proud",
+      "frightened",
+      "cynical"
+    ]
+  },
+  {
+    "word": "разочарованный",
+    "answer": "disappointed",
+    "options": [
+      "delighted",
+      "disappointed",
+      "excited",
+      "proud"
+    ]
+  },
+  {
+    "word": "разочарованный",
+    "answer": "disappointed",
+    "options": [
+      "embarrassed",
+      "decisive",
+      "sensible",
+      "disappointed"
+    ]
+  },
+  {
+    "word": "скучающий",
+    "answer": "bored",
+    "options": [
+      "apprehensive",
+      "bored",
+      "frightened",
+      "gullible"
+    ]
+  },
+  {
+    "word": "скучающий",
+    "answer": "bored",
+    "options": [
+      "scared",
+      "cross",
+      "bored",
+      "impatient"
+    ]
+  },
+  {
+    "word": "доверчивый",
+    "answer": "gullible",
+    "options": [
+      "proud",
+      "relieved",
+      "gullible",
+      "delighted"
+    ]
+  },
+  {
+    "word": "доверчивый",
+    "answer": "gullible",
+    "options": [
+      "bored",
+      "gullible",
+      "excited",
+      "well-bred"
+    ]
+  },
+  {
+    "word": "уверенный в себе",
+    "answer": "self-confident",
+    "options": [
+      "impatient",
+      "frightened",
+      "self-confident",
+      "upset"
+    ]
+  },
+  {
+    "word": "уверенный в себе",
+    "answer": "self-confident",
+    "options": [
+      "self-confident",
+      "confused",
+      "charming",
+      "cross"
+    ]
+  },
+  {
+    "word": "испуганный",
+    "answer": "frightened",
+    "options": [
+      "frightened",
+      "disappointed",
+      "sensible",
+      "charming"
+    ]
+  },
+  {
+    "word": "испуганный",
+    "answer": "frightened",
+    "options": [
+      "upset",
+      "embarrassed",
+      "well-educated",
+      "frightened"
+    ]
+  },
+  {
+    "word": "растерянный",
+    "answer": "confused",
+    "options": [
+      "decisive",
+      "ashamed",
+      "confused",
+      "cheerful"
+    ]
+  },
+  {
+    "word": "сбитый с толку",
+    "answer": "confused",
+    "options": [
+      "scared",
+      "self-confident",
+      "confused",
+      "excited"
+    ]
+  },
+  {
+    "word": "эгоцентричный",
+    "answer": "self-centered",
+    "options": [
+      "tactful",
+      "self-centered",
+      "well-liked",
+      "confused"
+    ]
+  },
+  {
+    "word": "зацикленный на себе",
+    "answer": "self-centered",
+    "options": [
+      "trustworthy",
+      "self-centered",
+      "embarrassed",
+      "gullible"
+    ]
+  },
+  {
+    "word": "подозрительный",
+    "answer": "suspicious",
+    "options": [
+      "suspicious",
+      "upset",
+      "disappointed",
+      "impatient"
+    ]
+  },
+  {
+    "word": "недоверчивый",
+    "answer": "suspicious",
+    "options": [
+      "well-educated",
+      "well-bred",
+      "well-liked",
+      "suspicious"
+    ]
+  },
+  {
+    "word": "смущённый",
+    "answer": "embarrassed",
+    "options": [
+      "embarrassed",
+      "suspicious",
+      "sensible",
+      "proud"
+    ]
+  },
+  {
+    "word": "испытывающий неловкость",
+    "answer": "embarrassed",
+    "options": [
+      "embarrassed",
+      "trustworthy",
+      "relieved",
+      "assertive"
+    ]
+  },
+  {
+    "word": "скованный",
+    "answer": "self-conscious",
+    "options": [
+      "self-conscious",
+      "impatient",
+      "disappointed",
+      "assertive"
+    ]
+  },
+  {
+    "word": "испытывающий неуверенность из-за внимания окружающих",
+    "answer": "self-conscious",
+    "options": [
+      "upset",
+      "self-conscious",
+      "anxious",
+      "cheerful"
+    ]
+  },
+  {
+    "word": "испуганный",
+    "answer": "scared",
+    "options": [
+      "patient",
+      "scared",
+      "suspicious",
+      "egotistical"
+    ]
+  },
+  {
+    "word": "напуганный",
+    "answer": "scared",
+    "options": [
+      "scared",
+      "well-bred",
+      "cynical",
+      "sensitive"
+    ]
+  },
+  {
+    "word": "чувствительный",
+    "answer": "sensitive",
+    "options": [
+      "sensitive",
+      "confused",
+      "cross",
+      "impatient"
+    ]
+  },
+  {
+    "word": "восприимчивый",
+    "answer": "sensitive",
+    "options": [
+      "self-conscious",
+      "assertive",
+      "sensitive",
+      "cynical"
+    ]
+  },
+  {
+    "word": "гордый",
+    "answer": "proud",
+    "options": [
+      "bored",
+      "ashamed",
+      "envious",
+      "proud"
+    ]
+  },
+  {
+    "word": "гордый",
+    "answer": "proud",
+    "options": [
+      "proud",
+      "relieved",
+      "cross",
+      "excited"
+    ]
+  },
+  {
+    "word": "хорошо образованный",
+    "answer": "well-educated",
+    "options": [
+      "envious",
+      "apprehensive",
+      "sensitive",
+      "well-educated"
+    ]
+  },
+  {
+    "word": "хорошо образованный",
+    "answer": "well-educated",
+    "options": [
+      "well-liked",
+      "decisive",
+      "anxious",
+      "well-educated"
+    ]
+  },
+  {
+    "word": "добрый",
+    "answer": "kind",
+    "options": [
+      "well-bred",
+      "scared",
+      "kind",
+      "upset"
+    ]
+  },
+  {
+    "word": "отзывчивый",
+    "answer": "kind",
+    "options": [
+      "cynical",
+      "kind",
+      "tactful",
+      "assertive"
+    ]
+  },
+  {
+    "word": "рассудительный",
+    "answer": "sensible",
+    "options": [
+      "well-bred",
+      "impatient",
+      "suspicious",
+      "sensible"
+    ]
+  },
+  {
+    "word": "благоразумный",
+    "answer": "sensible",
+    "options": [
+      "sensible",
+      "envious",
+      "self-confident",
+      "apprehensive"
+    ]
+  },
+  {
+    "word": "тактичный",
+    "answer": "tactful",
+    "options": [
+      "confused",
+      "frightened",
+      "tactful",
+      "bored"
+    ]
+  },
+  {
+    "word": "тактичный",
+    "answer": "tactful",
+    "options": [
+      "ashamed",
+      "kind",
+      "upset",
+      "tactful"
+    ]
+  },
+  {
+    "word": "всеми любимый",
+    "answer": "well-liked",
+    "options": [
+      "well-liked",
+      "well-educated",
+      "sensitive",
+      "disappointed"
+    ]
+  },
+  {
+    "word": "всеми любимый",
+    "answer": "well-liked",
+    "options": [
+      "scared",
+      "well-liked",
+      "clumsy",
+      "embarrassed"
+    ]
+  },
+  {
+    "word": "надёжный",
+    "answer": "reliable",
+    "options": [
+      "reliable",
+      "well-bred",
+      "sensitive",
+      "well-liked"
+    ]
+  },
+  {
+    "word": "надёжный",
+    "answer": "reliable",
+    "options": [
+      "apprehensive",
+      "upset",
+      "excited",
+      "reliable"
+    ]
+  },
+  {
+    "word": "решительный",
+    "answer": "decisive",
+    "options": [
+      "kind",
+      "decisive",
+      "well-liked",
+      "cross"
+    ]
+  },
+  {
+    "word": "решительный",
+    "answer": "decisive",
+    "options": [
+      "well-educated",
+      "tactful",
+      "decisive",
+      "apprehensive"
+    ]
+  },
+  {
+    "word": "воспитанный",
+    "answer": "well-bred",
+    "options": [
+      "anxious",
+      "well-bred",
+      "tactful",
+      "delighted"
+    ]
+  },
+  {
+    "word": "с хорошими манерами",
+    "answer": "well-bred",
+    "options": [
+      "apprehensive",
+      "sensitive",
+      "egotistical",
+      "well-bred"
+    ]
+  },
+  {
+    "word": "терпеливый",
+    "answer": "patient",
+    "options": [
+      "self-centered",
+      "patient",
+      "confused",
+      "scared"
+    ]
+  },
+  {
+    "word": "терпеливый",
+    "answer": "patient",
+    "options": [
+      "suspicious",
+      "apprehensive",
+      "well-educated",
+      "patient"
+    ]
+  },
+  {
+    "word": "довольный",
+    "answer": "delighted",
+    "options": [
+      "clumsy",
+      "well-bred",
+      "egotistical",
+      "delighted"
+    ]
+  },
+  {
+    "word": "довольный",
+    "answer": "delighted",
+    "options": [
+      "sensitive",
+      "charming",
+      "delighted",
+      "envious"
+    ]
+  },
+  {
+    "word": "нетерпеливый",
+    "answer": "impatient",
+    "options": [
+      "impatient",
+      "well-educated",
+      "self-conscious",
+      "suspicious"
+    ]
+  },
+  {
+    "word": "нетерпеливый",
+    "answer": "impatient",
+    "options": [
+      "impatient",
+      "cheerful",
+      "clumsy",
+      "kind"
+    ]
+  },
+  {
+    "word": "заслуживающий доверия",
+    "answer": "trustworthy",
+    "options": [
+      "suspicious",
+      "clumsy",
+      "trustworthy",
+      "egotistical"
+    ]
+  },
+  {
+    "word": "надёжный",
+    "answer": "trustworthy",
+    "options": [
+      "relieved",
+      "well-educated",
+      "trustworthy",
+      "frightened"
+    ]
+  }
+];
+let index=0, correct=0, solved=false, firstAttempt=true;
+const sentence=document.getElementById('sentence');
+const choices=document.getElementById('choices');
+const feedback=document.getElementById('feedback');
+const next=document.getElementById('next');
+const counter=document.getElementById('counter');
+const score=document.getElementById('score');
+const bar=document.getElementById('bar');
+const questionArea=document.getElementById('questionArea');
+const finish=document.getElementById('finish');
+function shuffle(xs){
+  for(let i=xs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[xs[i],xs[j]]=[xs[j],xs[i]];}
+  return xs;
+}
+function showQuestion(){
+  const q=questions[index]; solved=false; firstAttempt=true;
+  sentence.textContent=q.word;
+  choices.replaceChildren();
+  feedback.textContent='';feedback.className='feedback';
+  next.disabled=true;
+  counter.textContent=`${index+1} / ${questions.length}`;
+  bar.style.width=`${index/questions.length*100}%`;
+  shuffle([...q.options]).forEach(option=>{
+    const button=document.createElement('button');
+    button.type='button'; button.className='choice'; button.textContent=option;
+    button.addEventListener('click',()=>selectAnswer(option,button));
+    choices.appendChild(button);
+  });
+}
+function selectAnswer(option,button){
+  if(solved)return;
+  const q=questions[index];
+  if(option===q.answer){
+    solved=true;
+    button.classList.add('correct');
+    [...choices.children].forEach(b=>b.disabled=true);
+    if(firstAttempt)correct++;
+    score.textContent=`Правильных ответов с первой попытки: ${correct}`;
+    feedback.textContent='Правильно!';feedback.className='feedback good';
+    next.disabled=false;
+  }else{
+    firstAttempt=false;
+    button.classList.add('wrong');button.disabled=true;
+    feedback.textContent='Неверно. Попробуйте ещё раз.';feedback.className='feedback bad';
+  }
+}
+next.addEventListener('click',()=>{
+  if(!solved)return;
+  index++;
+  if(index<questions.length)showQuestion();
+  else{
+    questionArea.hidden=true;finish.hidden=false;
+    counter.textContent=`${questions.length} / ${questions.length}`;
+    bar.style.width='100%';
+    document.getElementById('result').textContent=`Правильных ответов с первой попытки: ${correct} из ${questions.length}.`;
+  }
+});
+document.getElementById('restart').addEventListener('click',()=>{
+  index=0;correct=0;score.textContent='Правильных ответов: 0';
+  finish.hidden=true;questionArea.hidden=false;showQuestion();
+});
+showQuestion();
+</script>
+</body>
+</html>
