@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motion Verbs — Upper-Intermediate</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: #f3f6fb; color: #243047;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .quiz {
+    width: min(720px, 100%); background: #fff; border-radius: 22px;
+    padding: 32px; box-shadow: 0 12px 35px rgba(30,50,90,.12);
+  }
+  .top { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+  h1 { font-size: clamp(24px, 4vw, 32px); margin:0 0 8px; }
+  .subtitle { color:#68758b; margin:0 0 24px; font-size:16px; }
+  .counter { color:#68758b; font-weight:700; white-space:nowrap; }
+  .track { height:8px; background:#e9edf4; border-radius:99px; overflow:hidden; margin:18px 0 30px; }
+  .bar { height:100%; width:0; background:#5278d8; transition:width .25s; }
+  .sentence { font-size:clamp(22px, 4vw, 29px); line-height:1.55; margin:12px 0 28px; }
+  .blank { display:inline-block; min-width:82px; text-align:center; color:#5278d8; font-weight:700; border-bottom:3px solid #b8c7e8; padding:0 5px 2px; }
+  .choices { display:flex; flex-wrap:wrap; gap:12px; }
+  .choice {
+    border:2px solid #d8dfeb; background:#fff; color:#243047; border-radius:12px;
+    padding:13px 28px; font-size:19px; font-weight:700; cursor:pointer;
+    transition:background .15s, border-color .15s;
+  }
+  .choice:hover:not(:disabled) { border-color:#5278d8; background:#f4f7ff; }
+  .choice:disabled { cursor:default; opacity:1; }
+  .choice.correct { background:#dff5e6; border-color:#32a45b; color:#176b35; }
+  .choice.wrong { background:#ffe3e3; border-color:#d94b4b; color:#a52222; }
+  .feedback { min-height:30px; margin:20px 0 8px; font-size:16px; font-weight:700; }
+  .feedback.good { color:#218447; }
+  .feedback.bad { color:#c03939; }
+  .bottom { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:22px; }
+  .score { color:#68758b; font-size:15px; }
+  .next, .restart {
+    border:0; border-radius:12px; padding:13px 20px; font-size:17px;
+    font-weight:700; color:white; background:#5278d8; cursor:pointer;
+  }
+  .next:disabled { background:#c4ccda; cursor:not-allowed; }
+  .next span { font-size:22px; vertical-align:-1px; margin-left:8px; }
+  .finish { text-align:center; padding:24px 0 8px; }
+  .finish h2 { font-size:28px; }
+  .finish p { color:#68758b; font-size:18px; line-height:1.5; }
+  @media (max-width:520px) { .quiz{padding:22px;} .bottom{align-items:flex-end;} .choice{flex:1;} }
+
+  .sentence { font-weight:700; }
+  .choices { display:grid; grid-template-columns:1fr 1fr; }
+  .choice { text-align:left; font-weight:600; font-size:17px; padding:14px 17px; line-height:1.35; }
+  .choice.correct { background:#dff5e6; border-color:#32a45b; color:#176b35; }
+  .choice.wrong { background:#ffe3e3; border-color:#d94b4b; color:#a52222; }
+  @media(max-width:580px) { .choices { grid-template-columns:1fr; } .choice {flex:auto;} }
+
+  .sentence {font-weight:400;}
+  .blank {font-size:inherit; min-width:120px;}
+  .sentence.good .blank {color:#176b35; border-color:#32a45b; background:#dff5e6; border-radius:6px;}
+</style>
+</head>
+<body>
+<main class="quiz">
+ <div class="top"><div><h1>Motion Verbs</h1><p class="subtitle">Upper-Intermediate (B2) · Выберите слово для пропуска</p></div><div class="counter" id="counter">1 / 21</div></div>
+ <div class="track"><div class="bar" id="bar"></div></div>
+ <section id="questionArea">
+  <div class="sentence" id="sentence"></div>
+  <div class="choices" id="choices"></div>
+  <div class="feedback" id="feedback" aria-live="polite"></div>
+  <div class="bottom"><div class="score" id="score">Правильных с первой попытки: 0</div><button class="next" id="next" disabled>Далее <span>➜</span></button></div>
+ </section>
+ <section class="finish" id="finish" hidden><h2>Готово!</h2><p id="result"></p><button class="restart" id="restart">Пройти ещё раз ↻</button></section>
+</main>
+<script>
+const questions = [
+  {
+    "sentence": "If the brakes fail on this steep slope, the wagon could ___ downhill without any way to stop it.",
+    "answer": "hurtle",
+    "options": [
+      "hurtle",
+      "inch",
+      "park",
+      "pause"
+    ],
+    "explanation": "«Hurtle» — нестись с большой скоростью."
+  },
+  {
+    "sentence": "The moment the photographer raised his camera, the startled fox turned and began to ___ into the forest.",
+    "answer": "zoom off",
+    "options": [
+      "zoom off",
+      "stand still",
+      "back away slowly",
+      "settle down"
+    ],
+    "explanation": "«Zoom off» — стремительно убежать или умчаться."
+  },
+  {
+    "sentence": "The rescue helicopter struggled to land because of the dust ___ around it in the powerful wind.",
+    "answer": "whirling",
+    "options": [
+      "whirling",
+      "settling",
+      "gathering",
+      "resting"
+    ],
+    "explanation": "«Whirling» — кружащийся, вихрем вращающийся."
+  },
+  {
+    "sentence": "I barely saw the cyclist ___ past me; by the time I turned around, he was already at the corner.",
+    "answer": "whizz",
+    "options": [
+      "whizz",
+      "limp",
+      "wander",
+      "stroll"
+    ],
+    "explanation": "«Whizz» — стремительно пронестись с характерным свистом."
+  },
+  {
+    "sentence": "There was a loud ___ as the express train rushed through the station without stopping.",
+    "answer": "whoosh",
+    "options": [
+      "whoosh",
+      "creak",
+      "knock",
+      "splash"
+    ],
+    "explanation": "«Whoosh» — звук стремительного движения воздуха или предмета."
+  },
+  {
+    "sentence": "Without proper safety equipment, the climbers could ___ into the deep ravine below.",
+    "answer": "plunge",
+    "options": [
+      "plunge",
+      "climb",
+      "float",
+      "balance"
+    ],
+    "explanation": "«Plunge» — резко падать или бросаться вниз, в глубину."
+  },
+  {
+    "sentence": "Through the window we could see leaves ___ in tight circles above the empty street.",
+    "answer": "whirling",
+    "options": [
+      "whirling",
+      "resting",
+      "lying",
+      "sticking"
+    ],
+    "explanation": "«Whirling» — вращаясь по кругу, кружась в вихре."
+  },
+  {
+    "sentence": "During the storm, loose roof tiles began to ___ through the air towards the parked cars.",
+    "answer": "hurtle",
+    "options": [
+      "hurtle",
+      "hover",
+      "dangle",
+      "settle"
+    ],
+    "explanation": "«Hurtle» — стремительно лететь, нестись с опасной скоростью."
+  },
+  {
+    "sentence": "The audience heard a brief ___ when the stage curtains were pulled aside by the hidden mechanism.",
+    "answer": "whoosh",
+    "options": [
+      "whoosh",
+      "clang",
+      "click",
+      "drip"
+    ],
+    "explanation": "«Whoosh» — быстрый шуршащий или свистящий звук."
+  },
+  {
+    "sentence": "If the new advertising campaign succeeds, our online sales could ___ to record levels.",
+    "answer": "soar",
+    "options": [
+      "soar",
+      "settle",
+      "shrink",
+      "stagnate"
+    ],
+    "explanation": "«Soar» — резко взлетать, стремительно расти."
+  },
+  {
+    "sentence": "A small drone suddenly began to ___ around the warehouse, avoiding shelves with remarkable precision.",
+    "answer": "whizz",
+    "options": [
+      "whizz",
+      "trudge",
+      "crawl",
+      "hobble"
+    ],
+    "explanation": "«Whizz» — быстро перемещаться, проноситься."
+  },
+  {
+    "sentence": "Experts predict that demand for electric vehicles may ___ if battery prices continue to fall.",
+    "answer": "soar",
+    "options": [
+      "soar",
+      "collapse",
+      "fade",
+      "decline"
+    ],
+    "explanation": "«Soar» — стремительно увеличиваться."
+  },
+  {
+    "sentence": "Despite the freezing temperature, she decided to ___ into the lake rather than enter the water slowly.",
+    "answer": "plunge",
+    "options": [
+      "plunge",
+      "wade",
+      "tiptoe",
+      "paddle"
+    ],
+    "explanation": "«Plunge» — резко нырнуть, броситься в воду."
+  },
+  {
+    "sentence": "The driver lost control, and the truck began to ___ towards the barrier at terrifying speed.",
+    "answer": "hurtle",
+    "options": [
+      "hurtle",
+      "crawl",
+      "reverse",
+      "idle"
+    ],
+    "explanation": "«Hurtle» — нестись с огромной скоростью, часто бесконтрольно."
+  },
+  {
+    "sentence": "The delivery rider had to ___ immediately after collecting the urgent package.",
+    "answer": "zoom off",
+    "options": [
+      "zoom off",
+      "hang around",
+      "stay put",
+      "slow down"
+    ],
+    "explanation": "«Zoom off» — быстро уехать или умчаться прочь."
+  },
+  {
+    "sentence": "During the demonstration, tiny racing robots appeared to ___ along the track at astonishing speeds.",
+    "answer": "whizz",
+    "options": [
+      "whizz",
+      "shuffle",
+      "creep",
+      "lumber"
+    ],
+    "explanation": "«Whizz» — мчаться, проноситься очень быстро."
+  },
+  {
+    "sentence": "When the eagle caught a rising current of warm air, it began to ___ high above the valley.",
+    "answer": "soar",
+    "options": [
+      "soar",
+      "dive",
+      "land",
+      "sink"
+    ],
+    "explanation": "«Soar» — парить, подниматься высоко в небо."
+  },
+  {
+    "sentence": "After the company announced disappointing results, investors watched its share price ___ by nearly forty percent.",
+    "answer": "plunge",
+    "options": [
+      "plunge",
+      "stabilise",
+      "recover",
+      "plateau"
+    ],
+    "explanation": "«Plunge» — резко обрушиваться, падать (например, о цене)."
+  },
+  {
+    "sentence": "The dancer kept her arms extended while ___ across the stage in a series of rapid turns.",
+    "answer": "whirling",
+    "options": [
+      "whirling",
+      "crawling",
+      "marching",
+      "stumbling"
+    ],
+    "explanation": "«Whirling» — кружась, быстро вращаясь."
+  },
+  {
+    "sentence": "As soon as the traffic light turned green, the sports car seemed to ___, leaving the others far behind.",
+    "answer": "zoom off",
+    "options": [
+      "zoom off",
+      "slow down",
+      "pull over",
+      "turn back"
+    ],
+    "explanation": "«Zoom off» — стремительно умчаться."
+  },
+  {
+    "sentence": "As the pressure valve opened, a sudden ___ of air drowned out the technician’s warning.",
+    "answer": "whoosh",
+    "options": [
+      "whoosh",
+      "rattle",
+      "thud",
+      "crackle"
+    ],
+    "explanation": "«Whoosh» — резкий свистящий или шуршащий звук быстро движущегося воздуха."
+  }
+];
+let index=0,correct=0,solved=false,firstAttempt=true;
+const sentence=document.getElementById('sentence'),choices=document.getElementById('choices'),feedback=document.getElementById('feedback'),next=document.getElementById('next'),counter=document.getElementById('counter'),score=document.getElementById('score'),bar=document.getElementById('bar'),questionArea=document.getElementById('questionArea'),finish=document.getElementById('finish');
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+function showQuestion(){
+ const q=questions[index];solved=false;firstAttempt=true;
+ const [before,after]=q.sentence.split('___');
+ sentence.replaceChildren(document.createTextNode(before));
+ const blank=document.createElement('span');blank.className='blank';blank.id='blank';blank.textContent='?';sentence.appendChild(blank,document.createTextNode(after));sentence.classList.remove('good');
+ choices.replaceChildren();feedback.textContent='';feedback.className='feedback';next.disabled=true;
+ counter.textContent=`${index+1} / ${questions.length}`;bar.style.width=`${index/questions.length*100}%`;
+ shuffle([...q.options]).forEach(option=>{const b=document.createElement('button');b.type='button';b.className='choice';b.textContent=option;b.addEventListener('click',()=>choose(option,b));choices.appendChild(b);});
+}
+function choose(option,button){
+ if(solved)return;const q=questions[index],blank=document.getElementById('blank');blank.textContent=option;
+ if(option===q.answer){
+  solved=true;button.classList.add('correct');sentence.classList.add('good');[...choices.children].forEach(x=>x.disabled=true);
+  if(firstAttempt)correct++;score.textContent=`Правильных с первой попытки: ${correct}`;
+  feedback.textContent='Правильно! '+q.explanation;feedback.className='feedback good';next.disabled=false;
+ }else{firstAttempt=false;button.classList.add('wrong');button.disabled=true;feedback.textContent='Не совсем. Попробуйте другой вариант.';feedback.className='feedback bad';}
+}
+next.addEventListener('click',()=>{if(!solved)return;index++;if(index<questions.length)showQuestion();else{questionArea.hidden=true;finish.hidden=false;counter.textContent=`${questions.length} / ${questions.length}`;bar.style.width='100%';document.getElementById('result').textContent=`Правильных с первой попытки: ${correct} из ${questions.length} (${Math.round(correct/questions.length*100)}%).`;}});
+document.getElementById('restart').addEventListener('click',()=>{index=0;correct=0;score.textContent='Правильных с первой попытки: 0';finish.hidden=true;questionArea.hidden=false;showQuestion();});
+showQuestion();
+</script>
+</body>
+</html>
